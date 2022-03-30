@@ -1,9 +1,11 @@
+import numpy
 import torch
 from torch import optim
 from torchtext.legacy import data
 import pandas as pd
 from tqdm import tqdm
 import torch.nn as nn
+from sklearn.metrics import f1_score
 
 # configuration
 train_path = "./Mytraining.csv"
@@ -63,12 +65,13 @@ valid_iter = data.BucketIterator(dataset=valid
                                  , device=device)  #
 test_iter = data.BucketIterator(dataset=test
                                 , batch_size=1
+                                , shuffle=False
                                 , sort_within_batch=False
                                 , repeat=False
                                 , device=device)  #
 
 # LSTM 超参数
-EPOCH = 5
+EPOCH = 3
 
 INPUT_DIM = len(TEXT.vocab)
 EMBEDDING_DIM = 300
@@ -131,13 +134,27 @@ def eval(epoch):
     with torch.no_grad():
         true_count = 0
         total_count = 0
+        y_true = []
+        y_predict = []
         for idx, batch in enumerate(valid_iter):
             input = batch.review
             target = batch.rating
             predicted = model(input).argmax(-1)
+            temp = predicted.cpu()
+
             true_count += (predicted == target).sum()
             total_count += batch_size
+
+            y_true = y_true + target.tolist()
+            y_predict = y_predict + temp.tolist()
+
         print("{}th epoch's accuracy is {}".format(epoch + 1, true_count / total_count))
+
+        macro_F1 = f1_score(y_true,y_predict,average="macro")
+        micro_F1 = f1_score(y_true,y_predict,average="micro")
+        print("{}th epoch's macro F1 is {}".format(epoch + 1, macro_F1))
+        print("{}th epoch's micro F1 is {}".format(epoch + 1, micro_F1))
+
 
 
 # 对测试集数据进行预测
@@ -146,22 +163,18 @@ def test():
     for idx, batch in enumerate(test_iter):
         test_review = batch.review
         test_rating = model(test_review).argmax(-1).item()
-        print(test_rating)
         res.append(test_rating)
     return res
 
 
 if __name__ == '__main__':
-    # for idx,batch in enumerate(train_iter):
-    #     print(idx)
-    #     print(batch.review.shape)
-    #     print(type(batch.review))
-    #     print(batch.rating.shape)
-    #     print("="*80)
-    # print(len(TEXT.vocab))
     for i in range(EPOCH):
         train(i)
         eval(i)
-    result = test()
-    print(len(result))
+    result_1 = test()
+    result_2 = test()
+    df_1 = pd.DataFrame({"rating":result_1})
+    df_2 = pd.DataFrame({"rating": result_2})
+    df_1.to_csv("./testing1.csv", index=False)
+    df_2.to_csv("./testing2.csv", index=False)
 

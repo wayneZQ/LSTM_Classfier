@@ -46,6 +46,6 @@ def process_csv(data_path, csv_name):
     raw_data.to_csv(csv_name, index=None)
 
 if __name__ == '__main__':
-    process_csv(train_path, "Mytraining.csv")
-    process_csv(valid_path, "Myvalidation.csv")
+    # process_csv(train_path, "Mytraining.csv")
+    # process_csv(valid_path, "Myvalidation.csv")
     process_csv(test_path, "Mytesting.csv")

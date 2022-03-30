@@ -3,6 +3,7 @@ import torch
 import torch.nn as nn
 from tqdm import tqdm
 from torchtext.legacy import data
+import csv
 
 seq_len = 65
 batch_size = 8
@@ -50,8 +51,7 @@ if __name__ == '__main__':
     list = []
     for i in range(5):
         list.append(i)
-    df = pd.DataFrame(list)
-    df.to_csv('Mytesting.csv',index=False,mode='a',header=['rating'],encoding="utf-8")
-
+    dataframe = pd.DataFrame({"rating":list})
+    dataframe.to_csv("./Mytesting.csv",mode="a",index = False)
 
 
